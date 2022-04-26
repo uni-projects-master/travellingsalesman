@@ -2,37 +2,45 @@ import random
 import os
 import gc
 import math
+from prim import prim
+from prim import Graph
 from time import perf_counter_ns
 
 
-class Vertex:
+class Node:
 	def __init__(self, name, x, y):
-		self.name = name
-		self.x = x 
-		self.y = y 
+		self.Name = name
+		self.x = x
+		self.y = y
 
 
-class Graph:
-	def __init__(self, dimension, file_type, verteces):
-		self.dimension = dimension
-		self.file_type = file_type
-		self.vertex_list = []
+class TSP:
+	def __init__(self, dim, type, points):
+		self.dimension = dim
+		self.edge_weight_type = type
+		self.points = []
+		self.distances = []
 		
-		for vertex in verteces:
-			vertex = vertex.split()
-			if vertex and 'EOF' not in vertex:
-				self.vertex_list.append(Vertex(vertex[0], float(vertex[1]), float(vertex[2])))
-		#print("BEFORE CONVERSION")
-		#print(self.vertex_list[0].x, "  ", self.vertex_list[0].y)
-		if self.file_type == 'GEO':
+		for n in points:
+			point = n.split()
+			if point and 'EOF' not in point:
+				self.points.append(Node(point[0], float(point[1]), float(point[2])))
+
+		if self.edge_weight_type == 'GEO':
 			self.geo_format()
-		#print("AFTER CONVERSION")
-		#print(self.vertex_list[0].x, "  ", self.vertex_list[0].y)
+
+		for v in self.points:
+			for w in self.points:
+				if self.edge_weight_type == 'GEO':
+					d = geo_distance(v, w)
+				else:
+					d = euc_distance(v, w)
+				self.distances.append(str(v.Name) + ' ' + str(w.Name) + ' ' + str(d))
 
 	def geo_format(self):
 		PI = 3.141592
 		# CONVERTING LATITUDE AND LONGTITUDE TO RADIAN
-		for i in self.vertex_list:
+		for i in self.points:
 			latitude = int(i.x)
 			min_x = i.x - latitude
 			radian_x = PI*(latitude + 5.0 * min_x / 3.0)/180.0
@@ -42,16 +50,18 @@ class Graph:
 			i.x = radian_x
 			i.y = radian_y
 
-	def get_graph(self):
+	def get_TSP(self):
 		print('--------------------dimension----------------')
 		print(self.dimension)
 		print('--------------------file type----------------')
-		print(self.file_type)
+		print(self.edge_weight_type)
 		print('--------------------vertex-------------------')
-		for i in range(len(self.vertex_list)):
-			print(self.vertex_list[i].name)
-			print(self.vertex_list[i].x)
-			print(self.vertex_list[i].y)
+		for i in self.points:
+			print(i.Name, '', i.x, '', i.y)
+
+		print('-------------------distances------------------')
+		for d in self.distances:
+			print(d)
 
 
 def geo_distance(point1, point2):
@@ -68,6 +78,24 @@ def euc_distance(point1, point2):
 	d2 = (point1.y - point2.y)**2
 	euc_d = round(math.sqrt(d1 + d2))
 	return euc_d
+
+
+'''def preorder(tree):
+	if tree:
+		print(tree.getRootVal())
+		preorder(tree.getLefChild())
+		preorder(tree.getRightChild())'''
+
+
+def approx_metric_tsp(problem):
+	tsp_graph = Graph(problem.points, problem.distances)
+	#tsp_graph.get_graph()
+	r = random.choice(tsp_graph.vertices)
+	print("root is ", r.Name)
+	T_star = prim(tsp_graph, r)
+	#preorder(T_star)
+
+
 
 
 if __name__ == '__main__':
@@ -88,12 +116,12 @@ if __name__ == '__main__':
 			line = f.readline().split()
 			dimension = line[1]
 			line = f.readline().split()
-			file_type = line[1]
+			edge_weight_type = line[1]
 			f.readline()
 			f.readline()
 			f.readline()
-			verteces = f.read().splitlines()
-			g = Graph(dimension, file_type, verteces)
-
-
+			points = f.read().splitlines()
+			tsp = TSP(dimension, edge_weight_type, points)
+			#tsp.get_graph()
+			approx_metric_tsp(tsp)
 
