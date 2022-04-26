@@ -80,21 +80,21 @@ def euc_distance(point1, point2):
 	return euc_d
 
 
-'''def preorder(tree):
-	if tree:
-		print(tree.getRootVal())
-		preorder(tree.getLefChild())
-		preorder(tree.getRightChild())'''
+def preorder(traverse, root):
+	if root:
+		traverse.append(root.Name)
+		for i in root.Children:
+			preorder(traverse, i)
 
 
 def approx_metric_tsp(problem):
 	tsp_graph = Graph(problem.points, problem.distances)
-	#tsp_graph.get_graph()
 	r = random.choice(tsp_graph.vertices)
-	print("root is ", r.Name)
 	T_star = prim(tsp_graph, r)
-	#preorder(T_star)
-
+	H_cycle = []
+	preorder(H_cycle, r)
+	H_cycle.append(r.Name)
+	return H_cycle
 
 
 
@@ -123,5 +123,5 @@ if __name__ == '__main__':
 			points = f.read().splitlines()
 			tsp = TSP(dimension, edge_weight_type, points)
 			#tsp.get_graph()
-			approx_metric_tsp(tsp)
-
+			print(approx_metric_tsp(tsp))
+			#nearest_neighbor(tsp)

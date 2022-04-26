@@ -15,8 +15,7 @@ class vertex:
         self.Value = INF
         # VERTEX PARENT
         self.Parent = None
-        self.Left = None
-        self.Right = None
+        self.Children = []
 
     def reset(self):
         INF = 999999
@@ -68,6 +67,7 @@ class Graph:
     def find_adj(self, v):
         # find adjacents of a given vertex
         return self.edges[v].keys()
+
 
 
 class minHeap:
@@ -147,7 +147,6 @@ class minHeap:
         for i in self.Heap:
             print("Name: ", i.Name, ", Value: ", i.Value)
 
-
 def prim(G, r):
     # CHOOSE A STARTING POINT AT RANDOM
     start = r
@@ -177,8 +176,15 @@ def prim(G, r):
         # IF VERTEX IS NOT THE ROOT
         if ver.Parent is not None:
             ver_parent = ver.Parent
-            print(ver.Name, ' is child of ', ver_parent.Name)
+            ver_parent.Children.append(ver)
             A_weight += G.get_weight(ver, ver_parent)
+
+    '''for ver in G.vertices:
+        # IF VERTEX IS NOT THE ROOT
+        print("CHILDREN OF ", ver.Name)
+        for c in ver.Children:
+            print(c.Name, end=',')
+        print("")'''
     return A_weight
 
 
