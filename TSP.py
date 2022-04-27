@@ -41,7 +41,6 @@ class TSP:
 				self.distances[edge1] = d
 				self.distances[edge2] = d
 
-
 	def geo_format(self):
 		PI = 3.141592
 		# CONVERTING LATITUDE AND LONGTITUDE TO RADIAN
@@ -66,7 +65,7 @@ class TSP:
 
 		print('-------------------distances------------------')
 		for d in self.distances:
-			print(d)
+			print(d, '', self.distances[d])
 
 
 def geo_distance(point1, point2):
@@ -128,6 +127,71 @@ def nearest_neighbor(tsp):
 	return H_cycle
 
 
+def cheapest_insertion(tsp):
+	# initialization
+	r = random.choice(tsp.points)
+	H_cycle = []
+	H_cycle_edges = []
+	H_cycle_cost = 0
+
+	H_cycle.append(r.Name)
+	nearest_value = 999999
+	nearest = Node()
+	for vertex in tsp.points:
+		current_edge = r.Name + ' ' + vertex.Name
+		if tsp.distances[current_edge] < nearest_value and tsp.distances[current_edge] != 0:
+			nearest_value = tsp.distances[current_edge]
+			nearest = vertex
+	H_cycle.append(nearest.Name)
+	new_edge = r.Name + ' ' + nearest.Name
+	H_cycle_edges.append(new_edge)
+	
+	print('Result of initialization: ', H_cycle)
+	# repeat until there are no more nodes
+	Q = tsp.points
+	while Q:
+		print("-----------------------------------NEW ITERATION--------------------------------------")
+		candidate = Node()
+		node_i = Node()
+		node_j = Node()
+		# selection
+		for k in tsp.points:
+			new_weight = 999999
+			# find a vertex k not in the circuit
+			if k.Name not in H_cycle: 
+				#find an edge (i,j) of the circuit that minimizes w(i,k) + w(k,j) - w(i,j)
+				for edge in H_cycle_edges:
+					vertices_i_j = edge.split()
+					node_i.Name = vertices_i_j[0]
+					node_j.Name = vertices_i_j[1]
+					weight_i_k = tsp.distances[vertices_i_j[0] + ' ' + k.Name]
+					weight_k_j = tsp.distances[k.Name + ' ' + vertices_i_j[1]]
+					weight_i_j = tsp.distances[vertices_i_j[0] + ' ' + vertices_i_j[1]]
+					if (weight_i_k + weight_k_j - weight_i_j) < new_weight:
+						new_weight = weight_i_k + weight_k_j - weight_i_j
+						candidate = k
+
+		# insertion
+		print('Candidate: ', candidate.Name)
+		index_of_i = H_cycle.index(node_i.Name)
+		H_cycle.insert(index_of_i + 1, candidate.Name)
+		for edge in H_cycle_edges:
+			vertices_i_j = edge.split()
+			if vertices_i_j[0] == node_i.Name and vertices_i_j[1] == node_j.Name:
+				index_of_i_j = H_cycle_edges.index(edge)
+				H_cycle_edges[index_of_i_j] = vertices_i_j[0] + ' ' + candidate.Name
+				H_cycle_edges.insert(index_of_i_j + 1, candidate.Name + ' ' + vertices_i_j[1])
+
+		print('New cycle: ', H_cycle)
+		print('New cycle: ', H_cycle_edges)
+		Q.remove(k)
+		print('Remaining points: ')
+		for point in Q:
+			print(point.Name)
+
+	return H_cycle
+
+
 if __name__ == '__main__':
 
 	dir_name = 'tsp_dataset'
@@ -152,6 +216,7 @@ if __name__ == '__main__':
 			f.readline()
 			points = f.read().splitlines()
 			tsp = TSP(dimension, edge_weight_type, points)
-			#tsp.get_graph()
-			print(approx_metric_tsp(tsp))
-			print(nearest_neighbor(tsp))
+			#tsp.get_TSP()
+			#print(approx_metric_tsp(tsp))
+			#print(nearest_neighbor(tsp))
+			print(cheapest_insertion(tsp))
