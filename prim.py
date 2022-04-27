@@ -36,7 +36,6 @@ class Graph:
             new_vertex = vertex(name=v.Name)
             self.vertices.append(new_vertex)
             self.edges[new_vertex] = {}
-
         self.add_edges(edges)
 
     def reset(self):
@@ -49,7 +48,7 @@ class Graph:
             if edge[0] != edge[1]:
                 u = self.vertices[int(edge[0])-1]
                 v = self.vertices[int(edge[1])-1]
-                w = int(edge[2])
+                w = int(list_edges[i])
                 # SINCE GRAPH IS UNDIRECTED, ADD EDGE IN TWO WAYS
                 self.edges[u][v] = w
                 self.edges[v][u] = w

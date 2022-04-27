@@ -8,7 +8,7 @@ from time import perf_counter_ns
 
 
 class Node:
-	def __init__(self, name, x, y):
+	def __init__(self, name=None, x=0, y=0):
 		self.Name = name
 		self.x = x
 		self.y = y
@@ -19,8 +19,8 @@ class TSP:
 		self.dimension = dim
 		self.edge_weight_type = type
 		self.points = []
-		self.distances = []
-		
+		self.distances = {}
+
 		for n in points:
 			point = n.split()
 			if point and 'EOF' not in point:
@@ -31,11 +31,16 @@ class TSP:
 
 		for v in self.points:
 			for w in self.points:
+				edge1 = str(v.Name) + ' ' + str(w.Name)
+				edge2 = str(v.Name) + ' ' + str(w.Name)
 				if self.edge_weight_type == 'GEO':
 					d = geo_distance(v, w)
 				else:
 					d = euc_distance(v, w)
-				self.distances.append(str(v.Name) + ' ' + str(w.Name) + ' ' + str(d))
+				#self.distances.append(edge_name + ' ' + str(d))
+				self.distances[edge1] = d
+				self.distances[edge2] = d
+
 
 	def geo_format(self):
 		PI = 3.141592
@@ -90,12 +95,37 @@ def preorder(traverse, root):
 def approx_metric_tsp(problem):
 	tsp_graph = Graph(problem.points, problem.distances)
 	r = random.choice(tsp_graph.vertices)
-	T_star = prim(tsp_graph, r)
+	H_cycle_cost = prim(tsp_graph, r)
 	H_cycle = []
 	preorder(H_cycle, r)
+	H_cycle_cost += tsp.distances[str(r.Name) + ' ' + str(H_cycle[-1])]
 	H_cycle.append(r.Name)
+	print(H_cycle_cost)
 	return H_cycle
 
+
+def nearest_neighbor(tsp):
+	r = random.choice(tsp.points)
+	H_cycle = []
+	H_cycle_cost = 0
+	Q = tsp.points
+	u = r
+	while Q:
+		nearest_value = 999999
+		nearest = Node()
+		# FIND THE NEAREST NEIGHBOR
+		for v in Q:
+			current_edge = u.Name + ' ' + v.Name
+			if tsp.distances[current_edge] < nearest_value:
+				nearest_value = tsp.distances[current_edge]
+				nearest = v
+		Q.remove(nearest)
+		H_cycle.append(nearest.Name)
+		H_cycle_cost += nearest_value
+		u = nearest
+	H_cycle.append(r.Name)
+
+	return H_cycle
 
 
 if __name__ == '__main__':
@@ -124,4 +154,4 @@ if __name__ == '__main__':
 			tsp = TSP(dimension, edge_weight_type, points)
 			#tsp.get_graph()
 			print(approx_metric_tsp(tsp))
-			#nearest_neighbor(tsp)
+			print(nearest_neighbor(tsp))
