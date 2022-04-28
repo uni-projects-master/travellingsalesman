@@ -93,18 +93,18 @@ def preorder(traverse, root):
 
 def approx_metric_tsp(problem):
 	tsp_graph = Graph(problem.points, problem.distances)
-	r = random.choice(tsp_graph.vertices)
+	r = tsp_graph.vertices[2] #random.choice(tsp_graph.vertices)
 	H_cycle_cost = prim(tsp_graph, r)
 	H_cycle = []
 	preorder(H_cycle, r)
 	H_cycle_cost += tsp.distances[str(r.Name) + ' ' + str(H_cycle[-1])]
 	H_cycle.append(r.Name)
-	print(H_cycle_cost)
+	print('Cycle cost in approx metric tsp: ', H_cycle_cost)
 	return H_cycle
 
 
 def nearest_neighbor(tsp):
-	r = random.choice(tsp.points)
+	r = tsp.points[2]#random.choice(tsp.points)
 	H_cycle = []
 	H_cycle_cost = 0
 	Q = tsp.points
@@ -124,12 +124,13 @@ def nearest_neighbor(tsp):
 		u = nearest
 	H_cycle.append(r.Name)
 
+	print('Cycle cost in nearest neighbor: ', H_cycle_cost)
 	return H_cycle
 
 
 def cheapest_insertion(tsp):
 	# initialization
-	r = random.choice(tsp.points)
+	r = tsp.points[2]#random.choice(tsp.points)
 	H_cycle = []
 	H_cycle_edges = []
 	H_cycle_cost = 0
@@ -146,17 +147,17 @@ def cheapest_insertion(tsp):
 	new_edge = r.Name + ' ' + nearest.Name
 	H_cycle_edges.append(new_edge)
 	
-	print('Result of initialization: ', H_cycle)
 	# repeat until there are no more nodes
 	Q = tsp.points
+	Q.remove(r)
+	Q.remove(nearest)
 	while Q:
-		print("-----------------------------------NEW ITERATION--------------------------------------")
 		candidate = Node()
 		node_i = Node()
 		node_j = Node()
+		new_weight = 999999
 		# selection
 		for k in tsp.points:
-			new_weight = 999999
 			# find a vertex k not in the circuit
 			if k.Name not in H_cycle: 
 				#find an edge (i,j) of the circuit that minimizes w(i,k) + w(k,j) - w(i,j)
@@ -172,9 +173,9 @@ def cheapest_insertion(tsp):
 						candidate = k
 
 		# insertion
-		print('Candidate: ', candidate.Name)
 		index_of_i = H_cycle.index(node_i.Name)
 		H_cycle.insert(index_of_i + 1, candidate.Name)
+		H_cycle_cost += new_weight
 		for edge in H_cycle_edges:
 			vertices_i_j = edge.split()
 			if vertices_i_j[0] == node_i.Name and vertices_i_j[1] == node_j.Name:
@@ -182,13 +183,10 @@ def cheapest_insertion(tsp):
 				H_cycle_edges[index_of_i_j] = vertices_i_j[0] + ' ' + candidate.Name
 				H_cycle_edges.insert(index_of_i_j + 1, candidate.Name + ' ' + vertices_i_j[1])
 
-		print('New cycle: ', H_cycle)
-		print('New cycle: ', H_cycle_edges)
-		Q.remove(k)
-		print('Remaining points: ')
-		for point in Q:
-			print(point.Name)
+		Q.remove(candidate)
 
+	print('Cycle cost in cheapest insertion: ', H_cycle_cost)
+	H_cycle.append(r.Name)
 	return H_cycle
 
 
@@ -216,7 +214,15 @@ if __name__ == '__main__':
 			f.readline()
 			points = f.read().splitlines()
 			tsp = TSP(dimension, edge_weight_type, points)
+			tsp_copy = TSP(dimension, edge_weight_type, points)
 			#tsp.get_TSP()
-			#print(approx_metric_tsp(tsp))
-			#print(nearest_neighbor(tsp))
+			print('------------------------------------------------')
+			print('Approximation done with Prim:')
+			print(approx_metric_tsp(tsp))
+			print('------------------------------------------------')
+			print('Approximation done with nearest neighbor:')
+			print(nearest_neighbor(tsp_copy))
+			print('------------------------------------------------')
+			print('Approximation done with cheapest insertion:')
 			print(cheapest_insertion(tsp))
+
