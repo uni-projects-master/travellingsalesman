@@ -93,7 +93,7 @@ def preorder(traverse, root):
 
 def approx_metric_tsp(problem):
 	tsp_graph = Graph(problem.points, problem.distances)
-	r = tsp_graph.vertices[2] #random.choice(tsp_graph.vertices)
+	r = random.choice(tsp_graph.vertices)
 	H_cycle_cost = prim(tsp_graph, r)
 	H_cycle = []
 	preorder(H_cycle, r)
@@ -104,7 +104,7 @@ def approx_metric_tsp(problem):
 
 
 def nearest_neighbor(tsp):
-	r = tsp.points[2]#random.choice(tsp.points)
+	r = random.choice(tsp.points)
 	H_cycle = []
 	H_cycle_cost = 0
 	Q = tsp.points
@@ -130,7 +130,7 @@ def nearest_neighbor(tsp):
 
 def cheapest_insertion(tsp):
 	# initialization
-	r = tsp.points[2]#random.choice(tsp.points)
+	r = random.choice(tsp.points)
 	H_cycle = []
 	H_cycle_edges = []
 	H_cycle_cost = 0
@@ -174,8 +174,10 @@ def cheapest_insertion(tsp):
 
 		# insertion
 		index_of_i = H_cycle.index(node_i.Name)
+		# insertion in the solution
 		H_cycle.insert(index_of_i + 1, candidate.Name)
 		H_cycle_cost += new_weight
+		# insertion in the edge list to keep integrity
 		for edge in H_cycle_edges:
 			vertices_i_j = edge.split()
 			if vertices_i_j[0] == node_i.Name and vertices_i_j[1] == node_j.Name:
@@ -217,12 +219,13 @@ if __name__ == '__main__':
 			tsp_copy = TSP(dimension, edge_weight_type, points)
 			#tsp.get_TSP()
 			print('------------------------------------------------')
-			print('Approximation done with Prim:')
+			print('CURRENTLY APPROXIMATING WITH PRIM')
 			print(approx_metric_tsp(tsp))
 			print('------------------------------------------------')
-			print('Approximation done with nearest neighbor:')
+			print('CURRENTLY APPROXIMATING WITH NEAREST NEIGHBOR')
 			print(nearest_neighbor(tsp_copy))
 			print('------------------------------------------------')
-			print('Approximation done with cheapest insertion:')
+			print('CURRENTLY APPROXIMATING WITH CHEAPEST INSERTION')
 			print(cheapest_insertion(tsp))
+			print('------------------------------------------------')
 
