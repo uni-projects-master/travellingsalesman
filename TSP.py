@@ -211,21 +211,22 @@ if __name__ == '__main__':
 			dimension = line[1]
 			line = f.readline().split()
 			edge_weight_type = line[1]
-			f.readline()
-			f.readline()
-			f.readline()
+
+			while line != "NODE_COORD_SECTION\n":
+				line = f.readline()
+
 			points = f.read().splitlines()
 			tsp = TSP(dimension, edge_weight_type, points)
 			tsp_copy = TSP(dimension, edge_weight_type, points)
 			#tsp.get_TSP()
 			print('------------------------------------------------')
 			print('CURRENTLY APPROXIMATING WITH PRIM')
-			print(approx_metric_tsp(tsp))
+			approx_metric_tsp(tsp)
 			print('------------------------------------------------')
 			print('CURRENTLY APPROXIMATING WITH NEAREST NEIGHBOR')
-			print(nearest_neighbor(tsp_copy))
+			nearest_neighbor(tsp_copy)
 			print('------------------------------------------------')
 			print('CURRENTLY APPROXIMATING WITH CHEAPEST INSERTION')
-			print(cheapest_insertion(tsp))
+			cheapest_insertion(tsp)
 			print('------------------------------------------------')
 
