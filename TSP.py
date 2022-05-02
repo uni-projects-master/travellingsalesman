@@ -5,6 +5,7 @@ import math
 from prim import prim
 from prim import Graph
 from time import perf_counter_ns
+import xlsxwriter
 
 
 class Node:
@@ -99,15 +100,15 @@ def approx_metric_tsp(problem):
 	preorder(H_cycle, r)
 	H_cycle_cost += tsp.distances[str(r.Name) + ' ' + str(H_cycle[-1])]
 	H_cycle.append(r.Name)
-	print('Cycle cost in approx metric tsp: ', H_cycle_cost)
-	return H_cycle
+	return H_cycle_cost
 
 
 def nearest_neighbor(tsp):
-	r = random.choice(tsp.points)
 	H_cycle = []
 	H_cycle_cost = 0
 	Q = tsp.points
+	r = random.choice(tsp.points)
+	Q.remove(r)
 	u = r
 	while Q:
 		nearest_value = 999999
@@ -123,9 +124,78 @@ def nearest_neighbor(tsp):
 		H_cycle_cost += nearest_value
 		u = nearest
 	H_cycle.append(r.Name)
-
+	H_cycle_cost += tsp.distances[str(r.Name) + ' ' + str(H_cycle[-1])]
 	print('Cycle cost in nearest neighbor: ', H_cycle_cost)
-	return H_cycle
+	return H_cycle_cost
+
+
+def random_insertion(tsp):
+
+	H_cycle = []
+	H_cycle_cost = 0
+
+	Q = tsp.points
+	root = random.choice(tsp.points)
+	#root = tsp.points[0]
+	Q.remove(root)
+
+	min_init_value = 999999
+	min_init_edge = ''
+	min_init_vertex = Node()
+	# Create the partial circuit (0,j)
+	for v in Q:
+		current_edge = root.Name + ' ' + v.Name
+		if tsp.distances[current_edge] < min_init_value:
+			min_init_value = tsp.distances[current_edge]
+			min_init_edge = current_edge
+			min_init_vertex = v
+
+	Q.remove(min_init_vertex)
+	H_cycle.append(min_init_edge)
+	H_cycle_cost += min_init_value
+	while Q:
+		# Randomly select a vertex k not in the circuit
+		rand_v = random.choice(Q)
+		Q.remove(rand_v)
+		min_insert_edge = ''
+		min_insert_value = 9999999
+		min_insert_index = -9999
+		for i in range(len(H_cycle)):
+			v_pair = H_cycle[i].split()
+			temp_edge_1 = v_pair[0] + ' ' + rand_v.Name
+			temp_edge_2 = v_pair[1] + ' ' + rand_v.Name
+			current_path_cost = tsp.distances[temp_edge_1] + tsp.distances[temp_edge_2] - tsp.distances[H_cycle[i]]
+			if current_path_cost < min_insert_value:
+				min_insert_value = current_path_cost
+				min_insert_edge = H_cycle[i]
+				min_insert_index = i
+
+		# '1 2'  '3 5'  '6 9'
+		# REMOVING '3 5'
+		# '1 2' '6 9'
+		# ADDING VERTEX 4 BETWEEN EDGE '3 5'
+		# '1 2' '3 4' '4 5' '6 9'
+		#H_cycle_cost -= H_
+		solution_pair = H_cycle[min_insert_index].split()
+		sol_edge1 = solution_pair[0] + ' ' + str(rand_v.Name)
+		sol_edge2 = str(rand_v.Name) + ' ' + solution_pair[1]
+		H_cycle.pop(min_insert_index)
+		H_cycle.insert(min_insert_index, sol_edge1)
+		H_cycle.insert(min_insert_index+1, sol_edge2)
+
+		#The cost
+		H_cycle_cost -= tsp.distances[min_insert_edge]
+		H_cycle_cost += tsp.distances[sol_edge1] + tsp.distances[sol_edge2]
+
+	#making it a cycle
+	cycle_start = H_cycle[0].split()
+	cycle_end = H_cycle[-1].split()
+	cycle_edge = cycle_start[0] + ' ' + cycle_end[1]
+	H_cycle.append(cycle_edge)
+	H_cycle_cost += tsp.distances[cycle_edge]
+	#print(H_cycle)
+	#print(H_cycle_cost)
+	return H_cycle_cost
 
 
 def cheapest_insertion(tsp):
@@ -197,12 +267,35 @@ if __name__ == '__main__':
 	dir_name = 'tsp_dataset'
 	directory = os.fsencode(dir_name)
 
+	workbook = xlsxwriter.Workbook('table.xlsx')
+	worksheet = workbook.add_worksheet()
+	row = 2
+	worksheet.write('A' + str(row), 'INSTANCE')
+	# NEAREST NEIGHBBOR
+	worksheet.write('B' + '1', 'NEAREST NEIGHBOR')
+	worksheet.write('B' + str(row), 'SOLUTION')
+	worksheet.write('C' + str(row), 'TIME')
+	worksheet.write('D' + str(row), 'ERROR')
+	# RANDOM INSERTION
+	worksheet.write('E' + '1', 'RANDOM INSERTION')
+	worksheet.write('E' + str(row), 'SOLUTION')
+	worksheet.write('F' + str(row), 'TIME')
+	worksheet.write('G' + str(row), 'ERROR')
+	# 2-APPROXIMATION
+	worksheet.write('H' + '1', '2-APPROXIMATION')
+	worksheet.write('H' + str(row), 'SOLUTION')
+	worksheet.write('I' + str(row), 'TIME')
+	worksheet.write('J' + str(row), 'ERROR')
+
 	for file in sorted(os.listdir(directory)):
 		filename = os.fsencode(file)
 		filename = filename.decode("utf-8")
 
 		if filename.endswith('.tsp'):
+			row += 1
 			print('looking at: ', filename)
+			worksheet.write('A' + str(row), filename)
+
 			f = open(dir_name + '/' + filename)
 			f.readline()
 			f.readline()
@@ -218,15 +311,40 @@ if __name__ == '__main__':
 			points = f.read().splitlines()
 			tsp = TSP(dimension, edge_weight_type, points)
 			tsp_copy = TSP(dimension, edge_weight_type, points)
+
 			#tsp.get_TSP()
 			print('------------------------------------------------')
 			print('CURRENTLY APPROXIMATING WITH PRIM')
-			approx_metric_tsp(tsp)
+			gc.disable()
+			start_time = perf_counter_ns()
+			approx_cost = approx_metric_tsp(tsp)
+			end_time = perf_counter_ns()
+			gc.enable()
+			approx_time = end_time - start_time
+			worksheet.write('H' + str(row), approx_cost)
+			worksheet.write('I' + str(row), approx_time)
+
 			print('------------------------------------------------')
 			print('CURRENTLY APPROXIMATING WITH NEAREST NEIGHBOR')
-			nearest_neighbor(tsp_copy)
-			print('------------------------------------------------')
-			print('CURRENTLY APPROXIMATING WITH CHEAPEST INSERTION')
-			cheapest_insertion(tsp)
-			print('------------------------------------------------')
+			gc.disable()
+			start_time = perf_counter_ns()
+			NN_cost = nearest_neighbor(tsp_copy)
+			end_time = perf_counter_ns()
+			gc.enable()
+			NN_time = end_time - start_time
+			worksheet.write('B' + str(row), NN_cost)
+			worksheet.write('C' + str(row), NN_time)
 
+			print('------------------------------------------------')
+			print('CURRENTLY APPROXIMATING WITH RANDOM INSERTION')
+			gc.disable()
+			start_time = perf_counter_ns()
+			RI_cost = random_insertion(tsp)
+			end_time = perf_counter_ns()
+			gc.enable()
+			RI_time = end_time - start_time
+			worksheet.write('E' + str(row), RI_cost)
+			worksheet.write('F' + str(row), RI_time)
+
+			print('------------------------------------------------')
+	workbook.close()
