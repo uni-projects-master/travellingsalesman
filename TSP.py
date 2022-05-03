@@ -47,10 +47,10 @@ class TSP:
 		# CONVERTING LATITUDE AND LONGTITUDE TO RADIAN
 		for i in self.points:
 			latitude = int(i.x)
-			min_x = i.x - latitude
+			min_x = abs(i.x - latitude)
 			radian_x = PI*(latitude + 5.0 * min_x / 3.0)/180.0
 			longitude = int(i.y)
-			min_y = i.x - longitude
+			min_y = i.y - longitude
 			radian_y = PI * (longitude + 5.0 * min_y / 3.0) / 180.0
 			i.x = radian_x
 			i.y = radian_y
@@ -85,11 +85,11 @@ def euc_distance(point1, point2):
 	return euc_d
 
 
-def preorder(traverse, root):
+def preorder(traverse, traverse_cost, root):
 	if root:
 		traverse.append(root.Name)
 		for i in root.Children:
-			preorder(traverse, i)
+			preorder(traverse, traverse_cost, i)
 
 
 def approx_metric_tsp(problem):
@@ -97,7 +97,7 @@ def approx_metric_tsp(problem):
 	r = random.choice(tsp_graph.vertices)
 	H_cycle_cost = prim(tsp_graph, r)
 	H_cycle = []
-	preorder(H_cycle, r)
+	preorder(H_cycle, H_cycle_cost, r)
 	H_cycle_cost += tsp.distances[str(r.Name) + ' ' + str(H_cycle[-1])]
 	H_cycle.append(r.Name)
 	return H_cycle_cost
@@ -311,7 +311,8 @@ if __name__ == '__main__':
 			points = f.read().splitlines()
 			tsp = TSP(dimension, edge_weight_type, points)
 			tsp_copy = TSP(dimension, edge_weight_type, points)
-
+			for i in tsp.points:
+				print(i.Name, " ", i.x, " ", i.y)
 			#tsp.get_TSP()
 			print('------------------------------------------------')
 			print('CURRENTLY APPROXIMATING WITH PRIM')
@@ -320,6 +321,7 @@ if __name__ == '__main__':
 			approx_cost = approx_metric_tsp(tsp)
 			end_time = perf_counter_ns()
 			gc.enable()
+			print(approx_cost)
 			approx_time = end_time - start_time
 			worksheet.write('H' + str(row), approx_cost)
 			worksheet.write('I' + str(row), approx_time)
@@ -329,6 +331,7 @@ if __name__ == '__main__':
 			gc.disable()
 			start_time = perf_counter_ns()
 			NN_cost = nearest_neighbor(tsp_copy)
+			print(NN_cost)
 			end_time = perf_counter_ns()
 			gc.enable()
 			NN_time = end_time - start_time
@@ -339,11 +342,11 @@ if __name__ == '__main__':
 			print('CURRENTLY APPROXIMATING WITH RANDOM INSERTION')
 			gc.disable()
 			start_time = perf_counter_ns()
-			RI_cost = random_insertion(tsp)
+			#RI_cost = random_insertion(tsp)
 			end_time = perf_counter_ns()
 			gc.enable()
 			RI_time = end_time - start_time
-			worksheet.write('E' + str(row), RI_cost)
+			#worksheet.write('E' + str(row), RI_cost)
 			worksheet.write('F' + str(row), RI_time)
 
 			print('------------------------------------------------')
