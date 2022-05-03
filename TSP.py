@@ -267,7 +267,7 @@ if __name__ == '__main__':
 	dir_name = 'tsp_dataset'
 	directory = os.fsencode(dir_name)
 
-	workbook = xlsxwriter.Workbook('table.xlsx')
+	workbook = xlsxwriter.Workbook('table_fra.xlsx')
 	worksheet = workbook.add_worksheet()
 	row = 2
 	worksheet.write('A' + str(row), 'INSTANCE')
@@ -286,6 +286,11 @@ if __name__ == '__main__':
 	worksheet.write('H' + str(row), 'SOLUTION')
 	worksheet.write('I' + str(row), 'TIME')
 	worksheet.write('J' + str(row), 'ERROR')
+	# CHEAPEST INSERTION
+	worksheet.write('K' + '1', 'CHEAPEST INSERTION')
+	worksheet.write('K' + str(row), 'SOLUTION')
+	worksheet.write('L' + str(row), 'TIME')
+	worksheet.write('M' + str(row), 'ERROR')
 
 	for file in sorted(os.listdir(directory)):
 		filename = os.fsencode(file)
@@ -311,8 +316,8 @@ if __name__ == '__main__':
 			points = f.read().splitlines()
 			tsp = TSP(dimension, edge_weight_type, points)
 			tsp_copy = TSP(dimension, edge_weight_type, points)
-			for i in tsp.points:
-				print(i.Name, " ", i.x, " ", i.y)
+			tsp_second_copy = TSP(dimension, edge_weight_type, points)
+
 			#tsp.get_TSP()
 			print('------------------------------------------------')
 			print('CURRENTLY APPROXIMATING WITH PRIM')
@@ -321,7 +326,6 @@ if __name__ == '__main__':
 			approx_cost = approx_metric_tsp(tsp)
 			end_time = perf_counter_ns()
 			gc.enable()
-			print(approx_cost)
 			approx_time = end_time - start_time
 			worksheet.write('H' + str(row), approx_cost)
 			worksheet.write('I' + str(row), approx_time)
@@ -331,7 +335,6 @@ if __name__ == '__main__':
 			gc.disable()
 			start_time = perf_counter_ns()
 			NN_cost = nearest_neighbor(tsp_copy)
-			print(NN_cost)
 			end_time = perf_counter_ns()
 			gc.enable()
 			NN_time = end_time - start_time
@@ -339,14 +342,25 @@ if __name__ == '__main__':
 			worksheet.write('C' + str(row), NN_time)
 
 			print('------------------------------------------------')
+			print('CURRENTLY APPROXIMATING WITH CHEAPEST INSERTION')
+			gc.disable()
+			start_time = perf_counter_ns()
+			NN_cost = nearest_neighbor(tsp_second_copy)
+			end_time = perf_counter_ns()
+			gc.enable()
+			NN_time = end_time - start_time
+			worksheet.write('K' + str(row), NN_cost)
+			worksheet.write('L' + str(row), NN_time)
+
+			print('------------------------------------------------')
 			print('CURRENTLY APPROXIMATING WITH RANDOM INSERTION')
 			gc.disable()
 			start_time = perf_counter_ns()
-			#RI_cost = random_insertion(tsp)
+			RI_cost = random_insertion(tsp)
 			end_time = perf_counter_ns()
 			gc.enable()
 			RI_time = end_time - start_time
-			#worksheet.write('E' + str(row), RI_cost)
+			worksheet.write('E' + str(row), RI_cost)
 			worksheet.write('F' + str(row), RI_time)
 
 			print('------------------------------------------------')
