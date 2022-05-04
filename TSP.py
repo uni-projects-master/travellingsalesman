@@ -269,7 +269,7 @@ if __name__ == '__main__':
 	dir_name = 'tsp_dataset'
 	directory = os.fsencode(dir_name)
 
-	workbook = xlsxwriter.Workbook('table.xlsx')
+	workbook = xlsxwriter.Workbook('table_fra.xlsx')
 	worksheet = workbook.add_worksheet()
 	row = 2
 	worksheet.write('A' + str(row), 'INSTANCE')
@@ -288,6 +288,11 @@ if __name__ == '__main__':
 	worksheet.write('H' + str(row), 'SOLUTION')
 	worksheet.write('I' + str(row), 'TIME')
 	worksheet.write('J' + str(row), 'ERROR')
+	# CHEAPEST INSERTION
+	worksheet.write('K' + '1', 'CHEAPEST INSERTION')
+	worksheet.write('K' + str(row), 'SOLUTION')
+	worksheet.write('L' + str(row), 'TIME')
+	worksheet.write('M' + str(row), 'ERROR')
 
 	for file in sorted(os.listdir(directory)):
 		filename = os.fsencode(file)
@@ -329,6 +334,17 @@ if __name__ == '__main__':
 
 			#worksheet.write('B' + str(row), NN_cost)
 
+
+			print('------------------------------------------------')
+			print('CURRENTLY APPROXIMATING WITH CHEAPEST INSERTION')
+			gc.disable()
+			start_time = perf_counter_ns()
+			NN_cost = nearest_neighbor(tsp_second_copy)
+			end_time = perf_counter_ns()
+			gc.enable()
+			NN_time = end_time - start_time
+			worksheet.write('K' + str(row), NN_cost)
+			worksheet.write('L' + str(row), NN_time)
 
 			print('------------------------------------------------')
 			print('CURRENTLY APPROXIMATING WITH RANDOM INSERTION')
