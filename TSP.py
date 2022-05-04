@@ -38,7 +38,6 @@ class TSP:
 					d = geo_distance(v, w)
 				else:
 					d = euc_distance(v, w)
-				#self.distances.append(edge_name + ' ' + str(d))
 				self.distances[edge1] = d
 				self.distances[edge2] = d
 
@@ -85,11 +84,11 @@ def euc_distance(point1, point2):
 	return euc_d
 
 
-def preorder(traverse, traverse_cost, root):
+def preorder(traverse, root):
 	if root:
 		traverse.append(root.Name)
 		for i in root.Children:
-			preorder(traverse, traverse_cost, i)
+			preorder(traverse, i)
 
 
 def approx_metric_tsp(problem):
@@ -97,7 +96,7 @@ def approx_metric_tsp(problem):
 	r = random.choice(tsp_graph.vertices)
 	H_cycle_cost = prim(tsp_graph, r)
 	H_cycle = []
-	preorder(H_cycle, H_cycle_cost, r)
+	preorder(H_cycle, r)
 	H_cycle_cost += tsp.distances[str(r.Name) + ' ' + str(H_cycle[-1])]
 	H_cycle.append(r.Name)
 	return H_cycle_cost
@@ -108,10 +107,11 @@ def nearest_neighbor(tsp):
 	H_cycle_cost = 0
 	Q = tsp.points
 	r = random.choice(tsp.points)
+	print("root: ", r.Name)
 	Q.remove(r)
 	u = r
 	while Q:
-		nearest_value = 999999
+		nearest_value = 99999999
 		nearest = Node()
 		# FIND THE NEAREST NEIGHBOR
 		for v in Q:
@@ -119,6 +119,8 @@ def nearest_neighbor(tsp):
 			if tsp.distances[current_edge] < nearest_value:
 				nearest_value = tsp.distances[current_edge]
 				nearest = v
+		print("nearest to ", u.Name, "is ", nearest.Name, "with value: ", nearest_value)
+		print("Q size: ", len(Q))
 		Q.remove(nearest)
 		H_cycle.append(nearest.Name)
 		H_cycle_cost += nearest_value
@@ -311,43 +313,29 @@ if __name__ == '__main__':
 			points = f.read().splitlines()
 			tsp = TSP(dimension, edge_weight_type, points)
 			tsp_copy = TSP(dimension, edge_weight_type, points)
-			for i in tsp.points:
-				print(i.Name, " ", i.x, " ", i.y)
+
 			#tsp.get_TSP()
 			print('------------------------------------------------')
 			print('CURRENTLY APPROXIMATING WITH PRIM')
-			gc.disable()
-			start_time = perf_counter_ns()
-			approx_cost = approx_metric_tsp(tsp)
-			end_time = perf_counter_ns()
-			gc.enable()
-			print(approx_cost)
-			approx_time = end_time - start_time
-			worksheet.write('H' + str(row), approx_cost)
-			worksheet.write('I' + str(row), approx_time)
+
+			#approx_cost = approx_metric_tsp(tsp)
+
+			#worksheet.write('H' + str(row), approx_cost)
 
 			print('------------------------------------------------')
 			print('CURRENTLY APPROXIMATING WITH NEAREST NEIGHBOR')
-			gc.disable()
-			start_time = perf_counter_ns()
+
 			NN_cost = nearest_neighbor(tsp_copy)
-			print(NN_cost)
-			end_time = perf_counter_ns()
-			gc.enable()
-			NN_time = end_time - start_time
-			worksheet.write('B' + str(row), NN_cost)
-			worksheet.write('C' + str(row), NN_time)
+
+			#worksheet.write('B' + str(row), NN_cost)
+
 
 			print('------------------------------------------------')
 			print('CURRENTLY APPROXIMATING WITH RANDOM INSERTION')
-			gc.disable()
-			start_time = perf_counter_ns()
+
 			#RI_cost = random_insertion(tsp)
-			end_time = perf_counter_ns()
-			gc.enable()
-			RI_time = end_time - start_time
 			#worksheet.write('E' + str(row), RI_cost)
-			worksheet.write('F' + str(row), RI_time)
+
 
 			print('------------------------------------------------')
 	workbook.close()

@@ -68,7 +68,6 @@ class Graph:
         return self.edges[v].keys()
 
 
-
 class minHeap:
     # Constructor to initialize a heap
     def __init__(self):
@@ -145,6 +144,7 @@ class minHeap:
         print("HEAP: ")
         for i in self.Heap:
             print("Name: ", i.Name, ", Value: ", i.Value)
+
 
 def prim(G, r):
     # CHOOSE A STARTING POINT AT RANDOM
