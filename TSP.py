@@ -94,11 +94,18 @@ def preorder(traverse, root):
 def approx_metric_tsp(problem):
 	tsp_graph = Graph(problem.points, problem.distances)
 	r = random.choice(tsp_graph.vertices)
-	H_cycle_cost = prim(tsp_graph, r)
+	H_cycle_cost = 0
+	prim(tsp_graph, r)
 	H_cycle = []
 	preorder(H_cycle, r)
-	H_cycle_cost += tsp.distances[str(r.Name) + ' ' + str(H_cycle[-1])]
+	for i in range(len(H_cycle)-1):
+		#print(str(H_cycle[i]) + ' ' + str(H_cycle[i+1]))
+		H_cycle_cost += tsp.distances[str(H_cycle[i]) + ' ' + str(H_cycle[i+1])]
+
+	#print(str(r.Name) + ' ' + str(H_cycle[-1]))
+	H_cycle_cost += tsp.distances[str(H_cycle[-1]) + ' ' + str(r.Name)]
 	H_cycle.append(r.Name)
+	print("Cost: ", H_cycle_cost)
 	return H_cycle_cost
 
 
@@ -318,33 +325,29 @@ if __name__ == '__main__':
 			points = f.read().splitlines()
 			tsp = TSP(dimension, edge_weight_type, points)
 			tsp_copy = TSP(dimension, edge_weight_type, points)
+			tsp_second_copy = TSP(dimension, edge_weight_type, points)
+
 
 			#tsp.get_TSP()
 			print('------------------------------------------------')
 			print('CURRENTLY APPROXIMATING WITH PRIM')
 
-			#approx_cost = approx_metric_tsp(tsp)
-
+			approx_cost = approx_metric_tsp(tsp)
 			#worksheet.write('H' + str(row), approx_cost)
 
 			print('------------------------------------------------')
 			print('CURRENTLY APPROXIMATING WITH NEAREST NEIGHBOR')
 
-			NN_cost = nearest_neighbor(tsp_copy)
-
+			#NN_cost = nearest_neighbor(tsp_copy)
 			#worksheet.write('B' + str(row), NN_cost)
 
 
 			print('------------------------------------------------')
 			print('CURRENTLY APPROXIMATING WITH CHEAPEST INSERTION')
-			gc.disable()
-			start_time = perf_counter_ns()
-			NN_cost = nearest_neighbor(tsp_second_copy)
-			end_time = perf_counter_ns()
-			gc.enable()
-			NN_time = end_time - start_time
-			worksheet.write('K' + str(row), NN_cost)
-			worksheet.write('L' + str(row), NN_time)
+
+			#CI_cost = cheapest_insertion(tsp_second_copy)
+			#worksheet.write('K' + str(row), NN_cost)
+
 
 			print('------------------------------------------------')
 			print('CURRENTLY APPROXIMATING WITH RANDOM INSERTION')
