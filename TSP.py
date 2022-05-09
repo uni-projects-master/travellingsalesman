@@ -1,6 +1,7 @@
 import random
 import os
 import gc
+import copy
 import math
 from prim import prim
 from prim import Graph
@@ -105,16 +106,16 @@ def approx_metric_tsp(problem):
 	#print(str(r.Name) + ' ' + str(H_cycle[-1]))
 	H_cycle_cost += tsp.distances[str(H_cycle[-1]) + ' ' + str(r.Name)]
 	H_cycle.append(r.Name)
-	print("Cost: ", H_cycle_cost)
+	#print("Cost: ", H_cycle_cost)
 	return H_cycle_cost
 
 
 def nearest_neighbor(tsp):
+	tsp_copy = copy.deepcopy(tsp)
 	H_cycle = []
 	H_cycle_cost = 0
-	Q = tsp.points
-	r = random.choice(tsp.points)
-	print("root: ", r.Name)
+	Q = tsp_copy.points
+	r = random.choice(tsp_copy.points)
 	Q.remove(r)
 	u = r
 	while Q:
@@ -123,29 +124,27 @@ def nearest_neighbor(tsp):
 		# FIND THE NEAREST NEIGHBOR
 		for v in Q:
 			current_edge = u.Name + ' ' + v.Name
-			if tsp.distances[current_edge] < nearest_value:
-				nearest_value = tsp.distances[current_edge]
+			if tsp_copy.distances[current_edge] < nearest_value:
+				nearest_value = tsp_copy.distances[current_edge]
 				nearest = v
-		print("nearest to ", u.Name, "is ", nearest.Name, "with value: ", nearest_value)
-		print("Q size: ", len(Q))
 		Q.remove(nearest)
 		H_cycle.append(nearest.Name)
 		H_cycle_cost += nearest_value
 		u = nearest
 	H_cycle.append(r.Name)
-	H_cycle_cost += tsp.distances[str(r.Name) + ' ' + str(H_cycle[-1])]
-	print('Cycle cost in nearest neighbor: ', H_cycle_cost)
+	H_cycle_cost += tsp_copy.distances[str(r.Name) + ' ' + str(H_cycle[-1])]
+	#print('Cycle cost in nearest neighbor: ', H_cycle_cost)
 	return H_cycle_cost
 
 
 def random_insertion(tsp):
-
+	tsp_copy = copy.deepcopy(tsp)
 	H_cycle = []
 	H_cycle_cost = 0
 
-	Q = tsp.points
-	root = random.choice(tsp.points)
-	#root = tsp.points[0]
+	Q = tsp_copy.points
+	root = random.choice(tsp_copy.points)
+	#root = tsp_copy.points[0]
 	Q.remove(root)
 
 	min_init_value = 999999
@@ -154,8 +153,8 @@ def random_insertion(tsp):
 	# Create the partial circuit (0,j)
 	for v in Q:
 		current_edge = root.Name + ' ' + v.Name
-		if tsp.distances[current_edge] < min_init_value:
-			min_init_value = tsp.distances[current_edge]
+		if tsp_copy.distances[current_edge] < min_init_value:
+			min_init_value = tsp_copy.distances[current_edge]
 			min_init_edge = current_edge
 			min_init_vertex = v
 
@@ -173,7 +172,7 @@ def random_insertion(tsp):
 			v_pair = H_cycle[i].split()
 			temp_edge_1 = v_pair[0] + ' ' + rand_v.Name
 			temp_edge_2 = v_pair[1] + ' ' + rand_v.Name
-			current_path_cost = tsp.distances[temp_edge_1] + tsp.distances[temp_edge_2] - tsp.distances[H_cycle[i]]
+			current_path_cost = tsp_copy.distances[temp_edge_1] + tsp_copy.distances[temp_edge_2] - tsp_copy.distances[H_cycle[i]]
 			if current_path_cost < min_insert_value:
 				min_insert_value = current_path_cost
 				min_insert_edge = H_cycle[i]
@@ -193,15 +192,15 @@ def random_insertion(tsp):
 		H_cycle.insert(min_insert_index+1, sol_edge2)
 
 		#The cost
-		H_cycle_cost -= tsp.distances[min_insert_edge]
-		H_cycle_cost += tsp.distances[sol_edge1] + tsp.distances[sol_edge2]
+		H_cycle_cost -= tsp_copy.distances[min_insert_edge]
+		H_cycle_cost += tsp_copy.distances[sol_edge1] + tsp_copy.distances[sol_edge2]
 
 	#making it a cycle
 	cycle_start = H_cycle[0].split()
 	cycle_end = H_cycle[-1].split()
 	cycle_edge = cycle_start[0] + ' ' + cycle_end[1]
 	H_cycle.append(cycle_edge)
-	H_cycle_cost += tsp.distances[cycle_edge]
+	H_cycle_cost += tsp_copy.distances[cycle_edge]
 	#print(H_cycle)
 	#print(H_cycle_cost)
 	return H_cycle_cost
@@ -209,7 +208,8 @@ def random_insertion(tsp):
 
 def cheapest_insertion(tsp):
 	# initialization
-	r = random.choice(tsp.points)
+	tsp_copy = copy.deepcopy(tsp)
+	r = random.choice(tsp_copy.points)
 	H_cycle = []
 	H_cycle_edges = []
 	H_cycle_cost = 0
@@ -217,17 +217,17 @@ def cheapest_insertion(tsp):
 	H_cycle.append(r.Name)
 	nearest_value = 999999
 	nearest = Node()
-	for vertex in tsp.points:
+	for vertex in tsp_copy.points:
 		current_edge = r.Name + ' ' + vertex.Name
-		if tsp.distances[current_edge] < nearest_value and tsp.distances[current_edge] != 0:
-			nearest_value = tsp.distances[current_edge]
+		if tsp_copy.distances[current_edge] < nearest_value and tsp_copy.distances[current_edge] != 0:
+			nearest_value = tsp_copy.distances[current_edge]
 			nearest = vertex
 	H_cycle.append(nearest.Name)
 	new_edge = r.Name + ' ' + nearest.Name
 	H_cycle_edges.append(new_edge)
 	
 	# repeat until there are no more nodes
-	Q = tsp.points
+	Q = tsp_copy.points
 	Q.remove(r)
 	Q.remove(nearest)
 	while Q:
@@ -236,7 +236,7 @@ def cheapest_insertion(tsp):
 		node_j = Node()
 		new_weight = 999999
 		# selection
-		for k in tsp.points:
+		for k in tsp_copy.points:
 			# find a vertex k not in the circuit
 			if k.Name not in H_cycle: 
 				#find an edge (i,j) of the circuit that minimizes w(i,k) + w(k,j) - w(i,j)
@@ -244,9 +244,9 @@ def cheapest_insertion(tsp):
 					vertices_i_j = edge.split()
 					node_i.Name = vertices_i_j[0]
 					node_j.Name = vertices_i_j[1]
-					weight_i_k = tsp.distances[vertices_i_j[0] + ' ' + k.Name]
-					weight_k_j = tsp.distances[k.Name + ' ' + vertices_i_j[1]]
-					weight_i_j = tsp.distances[vertices_i_j[0] + ' ' + vertices_i_j[1]]
+					weight_i_k = tsp_copy.distances[vertices_i_j[0] + ' ' + k.Name]
+					weight_k_j = tsp_copy.distances[k.Name + ' ' + vertices_i_j[1]]
+					weight_i_j = tsp_copy.distances[vertices_i_j[0] + ' ' + vertices_i_j[1]]
 					if (weight_i_k + weight_k_j - weight_i_j) < new_weight:
 						new_weight = weight_i_k + weight_k_j - weight_i_j
 						candidate = k
@@ -266,9 +266,33 @@ def cheapest_insertion(tsp):
 
 		Q.remove(candidate)
 
-	print('Cycle cost in cheapest insertion: ', H_cycle_cost)
+	#print('Cycle cost in cheapest insertion: ', H_cycle_cost)
 	H_cycle.append(r.Name)
-	return H_cycle
+	return H_cycle_cost
+
+
+def measure_run_times(tsp, num_calls, num_instances, function_called):
+	sum_times = 0.0
+	for i in range(num_instances):
+		gc.disable()
+		start_time = perf_counter_ns()
+		for i in range(num_calls):
+
+			if function_called == 'approx_metric_tsp':
+				approx_metric_tsp(tsp)
+			elif function_called == 'nearest_neighbor':
+				nearest_neighbor(tsp)
+			elif function_called == 'random_insertion':
+				random_insertion(tsp)
+			elif function_called == 'cheapest_insertion':
+				cheapest_insertion(tsp)
+			
+		end_time = perf_counter_ns()
+		gc.enable()
+		sum_times += (end_time - start_time)/num_calls
+	avg_time = int(round(sum_times/num_instances))
+	# return average time in nanoseconds
+	return avg_time
 
 
 if __name__ == '__main__':
@@ -276,7 +300,28 @@ if __name__ == '__main__':
 	dir_name = 'tsp_dataset'
 	directory = os.fsencode(dir_name)
 
-	workbook = xlsxwriter.Workbook('table_fra.xlsx')
+	num_calls = 100
+	num_instances = 5
+	optimal_solution = {'burma14.tsp': 3323,
+						'ulysses16.tsp': 6859,
+						'ulysses22.tsp': 7013,
+						'eil51.tsp': 426,
+						'berlin52.tsp': 7542,
+						'kroD100.tsp': 21294,
+						'kroA100.tsp': 21282,
+						'ch150.tsp': 6528,
+						'gr202.tsp': 40160,
+						'gr229.tsp': 134602,
+						'pcb442.tsp': 50778 ,
+						'd493.tsp': 35002,
+						'dsj1000.tsp': 18659688}
+	run_times_prim = []
+	run_times_nearest = []
+	run_times_cheapest = []
+	run_times_random = []
+	graph_sizes = []
+
+	workbook = xlsxwriter.Workbook('result_table.xlsx')
 	worksheet = workbook.add_worksheet()
 	row = 2
 	worksheet.write('A' + str(row), 'INSTANCE')
@@ -316,6 +361,7 @@ if __name__ == '__main__':
 			f.readline()
 			line = f.readline().split()
 			dimension = line[1]
+			graph_sizes.append(dimension)
 			line = f.readline().split()
 			edge_weight_type = line[1]
 
@@ -324,37 +370,57 @@ if __name__ == '__main__':
 
 			points = f.read().splitlines()
 			tsp = TSP(dimension, edge_weight_type, points)
-			tsp_copy = TSP(dimension, edge_weight_type, points)
-			tsp_second_copy = TSP(dimension, edge_weight_type, points)
-
 
 			#tsp.get_TSP()
 			print('------------------------------------------------')
 			print('CURRENTLY APPROXIMATING WITH PRIM')
 
 			approx_cost = approx_metric_tsp(tsp)
-			#worksheet.write('H' + str(row), approx_cost)
+			measured_time_prim = measure_run_times(tsp, num_calls, num_instances, 'approx_metric_tsp')
+			run_times_prim.append(measured_time_prim)
+
+			worksheet.write('H' + str(row), approx_cost)
+			worksheet.write('I' + str(row), measured_time_prim)
+			prim_error = (approx_cost - optimal_solution[filename]) / optimal_solution[filename]
+			worksheet.write('J' + str(row), prim_error)
 
 			print('------------------------------------------------')
 			print('CURRENTLY APPROXIMATING WITH NEAREST NEIGHBOR')
 
-			#NN_cost = nearest_neighbor(tsp_copy)
-			#worksheet.write('B' + str(row), NN_cost)
+			NN_cost = nearest_neighbor(tsp)
+			measured_time_nearest = measure_run_times(tsp, num_calls, num_instances, 'nearest_neighbor')
+			run_times_nearest.append(measured_time_nearest)
 
+			worksheet.write('B' + str(row), NN_cost)
+			worksheet.write('C' + str(row), measured_time_nearest)
+			nearest_error = (NN_cost - optimal_solution[filename]) / optimal_solution[filename]
+			worksheet.write('D' + str(row), nearest_error)
 
 			print('------------------------------------------------')
 			print('CURRENTLY APPROXIMATING WITH CHEAPEST INSERTION')
 
-			#CI_cost = cheapest_insertion(tsp_second_copy)
-			#worksheet.write('K' + str(row), NN_cost)
+			CI_cost = cheapest_insertion(tsp)
+			measured_time_cheapest = measure_run_times(tsp, num_calls, num_instances, 'cheapest_insertion')
+			run_times_cheapest.append(measured_time_cheapest)
 
+			worksheet.write('K' + str(row), CI_cost)
+			worksheet.write('L' + str(row), measured_time_cheapest)
+			cheapest_error = (CI_cost - optimal_solution[filename]) / optimal_solution[filename]
+			worksheet.write('M' + str(row), cheapest_error)
 
 			print('------------------------------------------------')
 			print('CURRENTLY APPROXIMATING WITH RANDOM INSERTION')
 
-			#RI_cost = random_insertion(tsp)
-			#worksheet.write('E' + str(row), RI_cost)
+			RI_cost = random_insertion(tsp)
+			measured_time_random = measure_run_times(tsp, num_calls, num_instances, 'random_insertion')
+			run_times_random.append(measured_time_random)
 
+			worksheet.write('E' + str(row), RI_cost)
+			worksheet.write('F' + str(row), measured_time_random)
+			random_error = (RI_cost - optimal_solution[filename]) / optimal_solution[filename]
+			worksheet.write('G' + str(row), random_error)
 
 			print('------------------------------------------------')
+
+			f.close()
 	workbook.close()
