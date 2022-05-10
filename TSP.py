@@ -116,6 +116,7 @@ def nearest_neighbor(tsp):
 	H_cycle_cost = 0
 	Q = tsp_copy.points
 	r = random.choice(tsp_copy.points)
+	H_cycle.append(r.Name)
 	Q.remove(r)
 	u = r
 	while Q:
@@ -131,8 +132,9 @@ def nearest_neighbor(tsp):
 		H_cycle.append(nearest.Name)
 		H_cycle_cost += nearest_value
 		u = nearest
-	H_cycle.append(r.Name)
 	H_cycle_cost += tsp_copy.distances[str(r.Name) + ' ' + str(H_cycle[-1])]
+	H_cycle.append(r.Name)
+
 	#print('Cycle cost in nearest neighbor: ', H_cycle_cost)
 	return H_cycle_cost
 
@@ -167,7 +169,7 @@ def random_insertion(tsp):
 		Q.remove(rand_v)
 		min_insert_edge = ''
 		min_insert_value = 9999999
-		min_insert_index = -9999
+		min_insert_index = -1
 		for i in range(len(H_cycle)):
 			v_pair = H_cycle[i].split()
 			temp_edge_1 = v_pair[0] + ' ' + rand_v.Name
@@ -192,13 +194,17 @@ def random_insertion(tsp):
 		H_cycle.insert(min_insert_index+1, sol_edge2)
 
 		#The cost
-		H_cycle_cost -= tsp_copy.distances[min_insert_edge]
-		H_cycle_cost += tsp_copy.distances[sol_edge1] + tsp_copy.distances[sol_edge2]
+		#H_cycle_cost -= tsp_copy.distances[min_insert_edge]
+		#H_cycle_cost += tsp_copy.distances[sol_edge1] + tsp_copy.distances[sol_edge2]
 
 	#making it a cycle
+	for i in H_cycle:
+		#print(str(H_cycle[i]) + ' ' + str(H_cycle[i+1]))
+		H_cycle_cost += tsp_copy.distances[i]
+
 	cycle_start = H_cycle[0].split()
 	cycle_end = H_cycle[-1].split()
-	cycle_edge = cycle_start[0] + ' ' + cycle_end[1]
+	cycle_edge = cycle_end[1] + ' ' + cycle_start[0]
 	H_cycle.append(cycle_edge)
 	H_cycle_cost += tsp_copy.distances[cycle_edge]
 	#print(H_cycle)
@@ -276,8 +282,7 @@ def measure_run_times(tsp, num_calls, num_instances, function_called):
 	for i in range(num_instances):
 		gc.disable()
 		start_time = perf_counter_ns()
-		for i in range(num_calls):
-
+		for j in range(num_calls):
 			if function_called == 'approx_metric_tsp':
 				approx_metric_tsp(tsp)
 			elif function_called == 'nearest_neighbor':
@@ -286,7 +291,7 @@ def measure_run_times(tsp, num_calls, num_instances, function_called):
 				random_insertion(tsp)
 			elif function_called == 'cheapest_insertion':
 				cheapest_insertion(tsp)
-			
+
 		end_time = perf_counter_ns()
 		gc.enable()
 		sum_times += (end_time - start_time)/num_calls
@@ -301,7 +306,7 @@ if __name__ == '__main__':
 	directory = os.fsencode(dir_name)
 
 	num_calls = 100
-	num_instances = 5
+	num_instances = 1
 	optimal_solution = {'burma14.tsp': 3323,
 						'ulysses16.tsp': 6859,
 						'ulysses22.tsp': 7013,
@@ -312,7 +317,7 @@ if __name__ == '__main__':
 						'ch150.tsp': 6528,
 						'gr202.tsp': 40160,
 						'gr229.tsp': 134602,
-						'pcb442.tsp': 50778 ,
+						'pcb442.tsp': 50778,
 						'd493.tsp': 35002,
 						'dsj1000.tsp': 18659688}
 	run_times_prim = []
@@ -399,14 +404,14 @@ if __name__ == '__main__':
 			print('------------------------------------------------')
 			print('CURRENTLY APPROXIMATING WITH CHEAPEST INSERTION')
 
-			CI_cost = cheapest_insertion(tsp)
+			'''CI_cost = cheapest_insertion(tsp)
 			measured_time_cheapest = measure_run_times(tsp, num_calls, num_instances, 'cheapest_insertion')
 			run_times_cheapest.append(measured_time_cheapest)
 
 			worksheet.write('K' + str(row), CI_cost)
 			worksheet.write('L' + str(row), measured_time_cheapest)
 			cheapest_error = (CI_cost - optimal_solution[filename]) / optimal_solution[filename]
-			worksheet.write('M' + str(row), cheapest_error)
+			worksheet.write('M' + str(row), cheapest_error)'''
 
 			print('------------------------------------------------')
 			print('CURRENTLY APPROXIMATING WITH RANDOM INSERTION')
