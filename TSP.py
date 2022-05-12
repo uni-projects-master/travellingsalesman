@@ -306,7 +306,7 @@ if __name__ == '__main__':
 	directory = os.fsencode(dir_name)
 
 	num_calls = 100
-	num_instances = 1
+	num_instances = 5
 	optimal_solution = {'burma14.tsp': 3323,
 						'ulysses16.tsp': 6859,
 						'ulysses22.tsp': 7013,
@@ -351,6 +351,7 @@ if __name__ == '__main__':
 	worksheet.write('L' + str(row), 'TIME')
 	worksheet.write('M' + str(row), 'ERROR')
 
+
 	for file in sorted(os.listdir(directory)):
 		filename = os.fsencode(file)
 		filename = filename.decode("utf-8")
@@ -384,10 +385,10 @@ if __name__ == '__main__':
 			measured_time_prim = measure_run_times(tsp, num_calls, num_instances, 'approx_metric_tsp')
 			run_times_prim.append(measured_time_prim)
 
-			worksheet.write('H' + str(row), approx_cost)
+			#worksheet.write('H' + str(row), approx_cost)
 			worksheet.write('I' + str(row), measured_time_prim)
-			prim_error = (approx_cost - optimal_solution[filename]) / optimal_solution[filename]
-			worksheet.write('J' + str(row), prim_error)
+			#prim_error = (approx_cost - optimal_solution[filename]) / optimal_solution[filename]
+			#worksheet.write('J' + str(row), prim_error)
 
 			print('------------------------------------------------')
 			print('CURRENTLY APPROXIMATING WITH NEAREST NEIGHBOR')
@@ -396,10 +397,10 @@ if __name__ == '__main__':
 			measured_time_nearest = measure_run_times(tsp, num_calls, num_instances, 'nearest_neighbor')
 			run_times_nearest.append(measured_time_nearest)
 
-			worksheet.write('B' + str(row), NN_cost)
+			#worksheet.write('B' + str(row), NN_cost)
 			worksheet.write('C' + str(row), measured_time_nearest)
-			nearest_error = (NN_cost - optimal_solution[filename]) / optimal_solution[filename]
-			worksheet.write('D' + str(row), nearest_error)
+			#nearest_error = (NN_cost - optimal_solution[filename]) / optimal_solution[filename]
+			#worksheet.write('D' + str(row), nearest_error)
 
 			print('------------------------------------------------')
 			print('CURRENTLY APPROXIMATING WITH CHEAPEST INSERTION')
@@ -420,12 +421,18 @@ if __name__ == '__main__':
 			measured_time_random = measure_run_times(tsp, num_calls, num_instances, 'random_insertion')
 			run_times_random.append(measured_time_random)
 
-			worksheet.write('E' + str(row), RI_cost)
+			#worksheet.write('E' + str(row), RI_cost)
 			worksheet.write('F' + str(row), measured_time_random)
-			random_error = (RI_cost - optimal_solution[filename]) / optimal_solution[filename]
-			worksheet.write('G' + str(row), random_error)
+			#random_error = (RI_cost - optimal_solution[filename]) / optimal_solution[filename]
+			#worksheet.write('G' + str(row), random_error)
 
 			print('------------------------------------------------')
 
 			f.close()
+
+	with open('graph_results.txt', 'w+') as f_result:
+		f_result.write("Sizes\tPrim\tNearest\tRandom\n")
+		for i in range(len(graph_sizes)):
+			f_result.write("%s\t%s\t%s\t%s\n" % (graph_sizes[i], run_times_prim[i], run_times_nearest[i], run_times_random[i]))
+
 	workbook.close()
