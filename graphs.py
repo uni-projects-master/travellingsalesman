@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 
-
+# --------------------------------------READ DATA FROM THE FILE-----------------------------------------------------
 sizes = []
 prim_times = []
 nearest_times  = []
