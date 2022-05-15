@@ -21,6 +21,7 @@ class TSP:
 		self.dimension = dim
 		self.edge_weight_type = type
 		self.points = []
+		# we use a dictionary for storing the distances from each point 
 		self.distances = {}
 
 		for n in points:
@@ -39,6 +40,7 @@ class TSP:
 					d = geo_distance(v, w)
 				else:
 					d = euc_distance(v, w)
+				# since we are dealing with indirected graphs we save the distances for both points
 				self.distances[edge1] = d
 				self.distances[edge2] = d
 
@@ -69,6 +71,7 @@ class TSP:
 			print(d, '', self.distances[d])
 
 
+# distances function as reported in the FAQ
 def geo_distance(point1, point2):
 	RRR = 6378.388
 	q1 = math.cos(point1.y - point2.y)
@@ -93,24 +96,25 @@ def preorder(traverse, root):
 
 
 def approx_metric_tsp(problem):
+	# we need to convert our TSP graph to a similar data structure used in Prim
 	tsp_graph = Graph(problem.points, problem.distances)
 	r = random.choice(tsp_graph.vertices)
 	H_cycle_cost = 0
 	prim(tsp_graph, r)
 	H_cycle = []
 	preorder(H_cycle, r)
+	# calculate the final weight of the cycle
 	for i in range(len(H_cycle)-1):
-		#print(str(H_cycle[i]) + ' ' + str(H_cycle[i+1]))
 		H_cycle_cost += tsp.distances[str(H_cycle[i]) + ' ' + str(H_cycle[i+1])]
 
-	#print(str(r.Name) + ' ' + str(H_cycle[-1]))
 	H_cycle_cost += tsp.distances[str(H_cycle[-1]) + ' ' + str(r.Name)]
+	# complete the cycle
 	H_cycle.append(r.Name)
-	#print("Cost: ", H_cycle_cost)
 	return H_cycle_cost
 
 
 def nearest_neighbor(tsp):
+	# create a deep copy of the original tsp graph, since most of the euristics end up deleting nodes from the original data structure
 	tsp_copy = copy.deepcopy(tsp)
 	H_cycle = []
 	H_cycle_cost = 0
@@ -119,6 +123,7 @@ def nearest_neighbor(tsp):
 	H_cycle.append(r.Name)
 	Q.remove(r)
 	u = r
+	# while there are still points in the data structure
 	while Q:
 		nearest_value = 99999999
 		nearest = Node()
@@ -128,6 +133,7 @@ def nearest_neighbor(tsp):
 			if tsp_copy.distances[current_edge] < nearest_value:
 				nearest_value = tsp_copy.distances[current_edge]
 				nearest = v
+		# remove the node from the list of non inserted nodes and insert it in the solution
 		Q.remove(nearest)
 		H_cycle.append(nearest.Name)
 		H_cycle_cost += nearest_value
@@ -135,18 +141,17 @@ def nearest_neighbor(tsp):
 	H_cycle_cost += tsp_copy.distances[str(r.Name) + ' ' + str(H_cycle[-1])]
 	H_cycle.append(r.Name)
 
-	#print('Cycle cost in nearest neighbor: ', H_cycle_cost)
 	return H_cycle_cost
 
 
 def random_insertion(tsp):
+	# create a deep copy of the original tsp graph, since most of the euristics end up deleting nodes from the original data structure
 	tsp_copy = copy.deepcopy(tsp)
 	H_cycle = []
 	H_cycle_cost = 0
 
 	Q = tsp_copy.points
 	root = random.choice(tsp_copy.points)
-	#root = tsp_copy.points[0]
 	Q.remove(root)
 
 	min_init_value = 999999
@@ -197,9 +202,8 @@ def random_insertion(tsp):
 		#H_cycle_cost -= tsp_copy.distances[min_insert_edge]
 		#H_cycle_cost += tsp_copy.distances[sol_edge1] + tsp_copy.distances[sol_edge2]
 
-	#making it a cycle
+	# making it a cycle
 	for i in H_cycle:
-		#print(str(H_cycle[i]) + ' ' + str(H_cycle[i+1]))
 		H_cycle_cost += tsp_copy.distances[i]
 
 	cycle_start = H_cycle[0].split()
@@ -207,14 +211,13 @@ def random_insertion(tsp):
 	cycle_edge = cycle_end[1] + ' ' + cycle_start[0]
 	H_cycle.append(cycle_edge)
 	H_cycle_cost += tsp_copy.distances[cycle_edge]
-	#print(H_cycle)
-	#print(H_cycle_cost)
+	print(H_cycle)
+	print(H_cycle_cost)
 	return H_cycle_cost
 
 
 def cheapest_insertion(tsp):
-	# initialization
-	tsp_copy = copy.deepcopy(tsp)
+	# create a deep copy of the original tsp graph, since most of the euristics end up deleting nodes from the original data structure	tsp_copy = copy.deepcopy(tsp)
 	r = random.choice(tsp_copy.points)
 	H_cycle = []
 	H_cycle_edges = []
@@ -272,7 +275,6 @@ def cheapest_insertion(tsp):
 
 		Q.remove(candidate)
 
-	#print('Cycle cost in cheapest insertion: ', H_cycle_cost)
 	H_cycle.append(r.Name)
 	return H_cycle_cost
 
@@ -326,6 +328,7 @@ if __name__ == '__main__':
 	run_times_random = []
 	graph_sizes = []
 
+	# opening a xlsx table to write the results of the experiments
 	workbook = xlsxwriter.Workbook('result_table.xlsx')
 	worksheet = workbook.add_worksheet()
 	row = 2
@@ -351,7 +354,7 @@ if __name__ == '__main__':
 	worksheet.write('L' + str(row), 'TIME')
 	worksheet.write('M' + str(row), 'ERROR')
 
-
+	# foreach file in the dataset
 	for file in sorted(os.listdir(directory)):
 		filename = os.fsencode(file)
 		filename = filename.decode("utf-8")
@@ -361,6 +364,7 @@ if __name__ == '__main__':
 			print('looking at: ', filename)
 			worksheet.write('A' + str(row), filename)
 
+			# read all the needed informations from the file
 			f = open(dir_name + '/' + filename)
 			f.readline()
 			f.readline()
@@ -375,9 +379,17 @@ if __name__ == '__main__':
 				line = f.readline()
 
 			points = f.read().splitlines()
+			# create the tsp graph for the experiments
 			tsp = TSP(dimension, edge_weight_type, points)
 
-			#tsp.get_TSP()
+
+			'''
+			FOREACH FUNCTION USED TO APPROXIMATE A SOLUTION FOR THE TSP PROBLEM:
+			calculate the cost of the solution which is written in the final table
+			run the function a fixed amount of times to calculate its times of execution
+			append this results to a list 
+			calculate the error and write all the data on the final table
+			'''
 			print('------------------------------------------------')
 			print('CURRENTLY APPROXIMATING WITH PRIM')
 
@@ -385,10 +397,10 @@ if __name__ == '__main__':
 			measured_time_prim = measure_run_times(tsp, num_calls, num_instances, 'approx_metric_tsp')
 			run_times_prim.append(measured_time_prim)
 
-			#worksheet.write('H' + str(row), approx_cost)
+			worksheet.write('H' + str(row), approx_cost)
 			worksheet.write('I' + str(row), measured_time_prim)
-			#prim_error = (approx_cost - optimal_solution[filename]) / optimal_solution[filename]
-			#worksheet.write('J' + str(row), prim_error)
+			prim_error = (approx_cost - optimal_solution[filename]) / optimal_solution[filename]
+			worksheet.write('J' + str(row), prim_error)
 
 			print('------------------------------------------------')
 			print('CURRENTLY APPROXIMATING WITH NEAREST NEIGHBOR')
@@ -397,22 +409,27 @@ if __name__ == '__main__':
 			measured_time_nearest = measure_run_times(tsp, num_calls, num_instances, 'nearest_neighbor')
 			run_times_nearest.append(measured_time_nearest)
 
-			#worksheet.write('B' + str(row), NN_cost)
+			worksheet.write('B' + str(row), NN_cost)
 			worksheet.write('C' + str(row), measured_time_nearest)
-			#nearest_error = (NN_cost - optimal_solution[filename]) / optimal_solution[filename]
-			#worksheet.write('D' + str(row), nearest_error)
+			nearest_error = (NN_cost - optimal_solution[filename]) / optimal_solution[filename]
+			worksheet.write('D' + str(row), nearest_error)
 
+			'''
+			THE CHEAPEST INSERTION EURISTIC WAS IMPLEMENTED BUT NOT COVERED IN THE RESULTS OF THE EXPERIMENT. 
+			ITS RESULTS WERE SHOWN TO BE CORRECT
 			print('------------------------------------------------')
 			print('CURRENTLY APPROXIMATING WITH CHEAPEST INSERTION')
 
-			'''CI_cost = cheapest_insertion(tsp)
+			
+			CI_cost = cheapest_insertion(tsp)
 			measured_time_cheapest = measure_run_times(tsp, num_calls, num_instances, 'cheapest_insertion')
 			run_times_cheapest.append(measured_time_cheapest)
 
 			worksheet.write('K' + str(row), CI_cost)
 			worksheet.write('L' + str(row), measured_time_cheapest)
 			cheapest_error = (CI_cost - optimal_solution[filename]) / optimal_solution[filename]
-			worksheet.write('M' + str(row), cheapest_error)'''
+			worksheet.write('M' + str(row), cheapest_error)
+			'''
 
 			print('------------------------------------------------')
 			print('CURRENTLY APPROXIMATING WITH RANDOM INSERTION')
@@ -421,15 +438,16 @@ if __name__ == '__main__':
 			measured_time_random = measure_run_times(tsp, num_calls, num_instances, 'random_insertion')
 			run_times_random.append(measured_time_random)
 
-			#worksheet.write('E' + str(row), RI_cost)
+			worksheet.write('E' + str(row), RI_cost)
 			worksheet.write('F' + str(row), measured_time_random)
-			#random_error = (RI_cost - optimal_solution[filename]) / optimal_solution[filename]
-			#worksheet.write('G' + str(row), random_error)
+			random_error = (RI_cost - optimal_solution[filename]) / optimal_solution[filename]
+			worksheet.write('G' + str(row), random_error)
 
 			print('------------------------------------------------')
 
 			f.close()
 
+	# we write on a file the results for the execution times, which are processed in the 'graphs.py' file
 	with open('graph_results.txt', 'w+') as f_result:
 		f_result.write("Sizes\tPrim\tNearest\tRandom\n")
 		for i in range(len(graph_sizes)):
